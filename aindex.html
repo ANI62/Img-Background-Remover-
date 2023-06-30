@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Remove Background</title>
+    <meta charset="UTF-8" />
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+  </head>
+
+  <body>
+    <div id="app"></div>
+
+   <h1 style="color: #ff0023;text-align:center;" class="my-2">Remove Image Background</h1>
+    
+   <div class="my-4 mb-3" style="width:60%; margin:0px auto;">
+      <input class="form-control" id="formFile" type="file" />
+    </div>
+	
+	<br>
+
+	<table id="myTable" hidden="true" class="table table-warning table-striped text-center">
+	<tr>
+    <td><div style="margin: auto; max-width: 800px;" id="result1"></div></td>
+	<td><div  id="convert"></div> </td>     
+    <td><div style="margin: auto; max-width: 800px;" id="result"></div></td>
+	</tr>
+	</table>
+  <br>
+  
+  <div style="text-align:center" ><button hidden="true" onClick="window.location.reload();" type="button" class="btn btn-danger" id="clearBtn">Clear Window</button> <button hidden="true" type="button" class="btn btn-success" id="downBtn"></button>
+  
+  </div>  
+  
+    
+    <script type="module" src="index.js"></script>
+    <script src="./node_modules/blueimp-load-image/js/load-image.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+    <script>
+      document
+  .querySelector("input[type=file]")
+  .addEventListener("change", async function () {
+    const resizedImage = await loadImage(this.files[0], {
+		
+	//resizing image using blue-load-image module
+     
+      maxWidth: 1500,
+      maxHeight: 1500,
+      canvas: true
+    });
+
+    resizedImage.image.toBlob(async function (inputBlob) {
+      const formData = new FormData();
+	  
+	  //display table
+	  
+	  document.getElementById("myTable").removeAttribute("Hidden");
+	  
+	  //display input image 
+	  const inputImage = document.createElement("img");
+      document.querySelector("#result1").appendChild(inputImage);
+      inputImage.style.width = "250px";
+      inputImage.style.height = "250px";
+      inputImage.src = URL.createObjectURL(inputBlob);
+	  
+	  //display loader
+	  
+	  const conImage = document.createElement("img");
+      document.querySelector("#convert").appendChild(conImage);
+      conImage.style.width = "25%";
+      conImage.src = "spinner3.gif";
+	  
+	  //api call
+      formData.append("image_file", inputBlob);
+
+      const response = await fetch("https://sdk.photoroom.com/v1/segment", {
+        method: "POST",
+        headers: {
+          "x-api-key": process.env.APIKEY
+        },
+        body: formData
+      });
+	    
+
+     //output image
+	 
+      const outputBlob = await response.blob();
+	  conImage.src = "arrow.png";
+	  conImage.style.marginTop = "20%";
+	  
+      const outputImage = document.createElement("img");
+      document.querySelector("#result").appendChild(outputImage);
+      outputImage.style.width = "250px";
+      outputImage.style.height = "250px";
+      outputImage.src = URL.createObjectURL(outputBlob);
+	  
+	  //download button
+
+      const getImg = document.createElement("a");
+      const downBtn = document.querySelector("#downBtn");
+	  downBtn.appendChild(getImg);
+	  downBtn.removeAttribute("Hidden");
+      getImg.href = URL.createObjectURL(outputBlob);
+	  getImg.style.textDecoration = "none";
+	  getImg.style.color = "inherit";
+	  getImg.download = "removed-bg-image";
+      getImg.innerText = "Download (PNG)";
+	  
+	  //display clear button
+	  
+      const clearBtn = document.querySelector("#clearBtn");
+	  clearBtn.removeAttribute("Hidden");
+	  
+	  
+      
+
+    });
+  })
+    </script>
+  </body>
+</html>
